@@ -1,0 +1,19 @@
+name: Cookie Factory CI/CD
+on:
+  push:
+    branches: [ main ]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Dependencies
+        run: npm install
+      - name: Run Unit Tests
+        run: npm test # CI: Valida se o cookie tem nome
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to PaaS
+        run: echo "Deploying..."
