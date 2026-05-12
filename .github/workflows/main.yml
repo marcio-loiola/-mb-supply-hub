@@ -36,7 +36,11 @@ jobs:
     name: Build and Push Docker image
     needs: test
     runs-on: ubuntu-latest
-    if: ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_PASSWORD && secrets.IMAGE_NAME }}
+    env:
+      DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      IMAGE_NAME: ${{ secrets.IMAGE_NAME }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -48,26 +52,35 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Login to registry
+        if: ${{ env.DOCKER_USERNAME != '' && env.DOCKER_PASSWORD != '' && env.IMAGE_NAME != '' }}
         uses: docker/login-action@v2
         with:
-          registry: ${{ secrets.DOCKER_REGISTRY }}
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          registry: ${{ env.DOCKER_REGISTRY != '' && env.DOCKER_REGISTRY || 'docker.io' }}
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ env.DOCKER_PASSWORD }}
 
       - name: Build and push
+        if: ${{ env.DOCKER_USERNAME != '' && env.DOCKER_PASSWORD != '' && env.IMAGE_NAME != '' }}
         uses: docker/build-push-action@v4
         with:
           context: .
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ${{ secrets.DOCKER_REGISTRY }}/${{ secrets.IMAGE_NAME }}:latest
-            ${{ secrets.DOCKER_REGISTRY }}/${{ secrets.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.DOCKER_REGISTRY != '' && env.DOCKER_REGISTRY || 'docker.io' }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.DOCKER_REGISTRY != '' && env.DOCKER_REGISTRY || 'docker.io' }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
   deploy:
     name: Deploy (template)
     needs: docker-build-push
     runs-on: ubuntu-latest
+    env:
+      DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
+      IMAGE_NAME: ${{ secrets.IMAGE_NAME }}
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      SSH_PORT: ${{ secrets.SSH_PORT }}
     if: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy == 'true') || github.ref == 'refs/heads/main' }}
     steps:
       - name: Checkout
@@ -76,16 +89,16 @@ jobs:
       - name: Deploy placeholder
         run: |
           echo "Implementar aqui o passo de deploy desejado"
-          echo "Imagem construída: ${{ secrets.DOCKER_REGISTRY }}/${{ secrets.IMAGE_NAME }}:${{ github.sha }}"
+          echo "Imagem construída: ${{ env.DOCKER_REGISTRY != '' && env.DOCKER_REGISTRY || 'docker.io' }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
 
       - name: "Example: SSH deploy (template)"
-        if: ${{ secrets.SSH_PRIVATE_KEY }}
+        if: ${{ env.SSH_PRIVATE_KEY != '' }}
         uses: appleboy/ssh-action@v0.1.7
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT || '22' }}
+          host: ${{ env.SSH_HOST }}
+          username: ${{ env.SSH_USER }}
+          key: ${{ env.SSH_PRIVATE_KEY }}
+          port: ${{ env.SSH_PORT != '' && env.SSH_PORT || '22' }}
           script: |
             echo "Aqui você pode executar comandos no servidor para atualizar contêineres, fazer pull da imagem e reiniciar serviços"
 
