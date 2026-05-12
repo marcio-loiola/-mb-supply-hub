@@ -1,19 +1,95 @@
-name: Cookie Factory CI/CD
+name: CI/CD Pipeline
+
 on:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: 'Se true, executa o job de deploy' 
+        required: false
+        default: 'false'
+
 jobs:
   test:
+    name: Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Install Dependencies
-        run: npm install
-      - name: Run Unit Tests
-        run: npm test # CI: Valida se o cookie tem nome
-  deploy:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+  docker-build-push:
+    name: Build and Push Docker image
     needs: test
     runs-on: ubuntu-latest
+    if: ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_PASSWORD && secrets.IMAGE_NAME }}
     steps:
-      - name: Deploy to PaaS
-        run: echo "Deploying..."
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ secrets.DOCKER_REGISTRY }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ${{ secrets.DOCKER_REGISTRY }}/${{ secrets.IMAGE_NAME }}:latest
+            ${{ secrets.DOCKER_REGISTRY }}/${{ secrets.IMAGE_NAME }}:${{ github.sha }}
+
+  deploy:
+    name: Deploy (template)
+    needs: docker-build-push
+    runs-on: ubuntu-latest
+    if: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy == 'true') || github.ref == 'refs/heads/main' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy placeholder
+        run: |
+          echo "Implementar aqui o passo de deploy desejado"
+          echo "Imagem construída: ${{ secrets.DOCKER_REGISTRY }}/${{ secrets.IMAGE_NAME }}:${{ github.sha }}"
+
+      - name: Example: SSH deploy (template)
+        if: ${{ secrets.SSH_PRIVATE_KEY }}
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || '22' }}
+          script: |
+            echo "Aqui você pode executar comandos no servidor para atualizar contêineres, fazer pull da imagem e reiniciar serviços"
+
+# Observações:
+# - Defina os secrets em Settings > Secrets: DOCKER_REGISTRY (ex: docker.io), DOCKER_USERNAME, DOCKER_PASSWORD, IMAGE_NAME
+# - Para deploy automático, preencha as variáveis/segredos necessários e ajuste os passos de deploy acima.
+# - Esse workflow é um template genérico: adapte o job `deploy` para seu ambiente (k8s, docker-compose remoto, cloud, etc.).
