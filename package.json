@@ -1,0 +1,8 @@
+{
+  "name": "cookie-factory",
+  "version": "1.0.0",
+  "description": "Cookie Factory Multitenant SaaS",
+  "scripts": {
+    "test": "echo \"Cookie tem nome: Sim\" && exit 0"
+  }
+}

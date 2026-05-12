@@ -33,3 +33,7 @@ Thumbs.db
 .vscode/
 
 
+
+
+# App environment variables
+.env
