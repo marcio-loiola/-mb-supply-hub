@@ -78,7 +78,7 @@ jobs:
           echo "Implementar aqui o passo de deploy desejado"
           echo "Imagem construída: ${{ secrets.DOCKER_REGISTRY }}/${{ secrets.IMAGE_NAME }}:${{ github.sha }}"
 
-      - name: Example: SSH deploy (template)
+      - name: "Example: SSH deploy (template)"
         if: ${{ secrets.SSH_PRIVATE_KEY }}
         uses: appleboy/ssh-action@v0.1.7
         with:
