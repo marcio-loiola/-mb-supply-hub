@@ -2,6 +2,28 @@
 
 Bem-vindo ao repositório do **Cookie Factory**! Este projeto é um ambiente de aprendizado e desenvolvimento focado em arquitetura SaaS (Software as a Service) com modelo Multi-tenant, pronto para ser hospedado em plataformas PaaS (Heroku, Render, Google App Engine).
 
+## 🛠️ Stack Tecnológica e Arquitetura
+
+O sistema foi desenhado utilizando uma **Arquitetura de Monolito Modular**, com as fronteiras de cada módulo bem definidas, facilitando uma futura extração para microsserviços.
+
+*   **Backend:** Node.js com NestJS e TypeScript.
+*   **Frontend:** React com TypeScript.
+*   **Banco de Dados:** PostgreSQL.
+*   **ORM:** Prisma.
+*   **Deploy & Infraestrutura:** Docker Compose, CI/CD com GitHub Actions, e Deploy em PaaS.
+
+## 📦 Funcionalidades do Backend (Módulos Core)
+
+O projeto é dividido em domínios de negócio independentes, garantindo que o acoplamento seja minimizado. Todos os dados são isolados por inquilino (`tenantId`).
+
+1. **Gestão de Tenants (Inquilinos):** Cadastro e gerenciamento de diferentes empresas na mesma base de dados.
+2. **Usuários e Autenticação:** Controle de acesso com JWT e gestão do ciclo de vida dos usuários.
+3. **Permissões (RBAC):** Definição de papéis e regras de autorização granulares.
+4. **Catálogo de Produtos:** Gerenciamento do portfólio de produtos de cada inquilino.
+5. **Fornecedores:** Cadastro de parceiros comerciais.
+6. **Materiais e Estoque:** Registro de matérias-primas e movimentos de entrada/saída no inventário.
+7. **Relatórios (Reports):** Consolidação de dados analíticos respeitando estritamente o isolamento de informações.
+
 ## 🎯 Objetivo da Aula
 
 O objetivo deste repositório é demonstrar, na prática, conceitos vitais de engenharia de software escalável:
