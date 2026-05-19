@@ -1,3 +1,16 @@
-import { CreateTenantDto } from './create-tenant.dto';
+import { IsIn, IsOptional, IsString } from 'class-validator';
 
-export class UpdateTenantDto extends CreateTenantDto {}
+export class UpdateTenantDto {
+  @IsString()
+  @IsOptional()
+  name?: string;
+
+  @IsString()
+  @IsOptional()
+  address?: string;
+
+  @IsString()
+  @IsOptional()
+  @IsIn(['ACTIVE', 'INACTIVE', 'SUSPENDED'])
+  status?: string;
+}

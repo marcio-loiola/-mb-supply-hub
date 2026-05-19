@@ -13,12 +13,54 @@ enum TenantStatus {
   SUSPENDED
 }
 
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+}
+
 model Tenant {
-  id        Int      @id @default(autoincrement())
+  id        Int          @id @default(autoincrement())
   name      String
-  cnpj      String   @unique
+  cnpj      String       @unique
   address   String
   status    TenantStatus @default(ACTIVE)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  users     User[]
+  products  Product[]
+}
+
+model User {
+  id           Int        @id @default(autoincrement())
+  tenantId     Int
+  tenant       Tenant     @relation(fields: [tenantId], references: [id])
+  name         String
+  email        String
+  passwordHash String
+  status       UserStatus @default(ACTIVE)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+}
+
+model Product {
+  id          Int           @id @default(autoincrement())
+  tenantId    Int
+  tenant      Tenant        @relation(fields: [tenantId], references: [id])
+  name        String
+  description String?
+  sku         String
+  status      ProductStatus @default(ACTIVE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@unique([tenantId, sku])
+  @@index([tenantId])
 }
