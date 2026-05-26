@@ -1,0 +1,11 @@
+{
+  "name": "cookie-factory",
+  "version": "1.0.0",
+  "description": "Cookie Factory Multitenant SaaS",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
